@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Example: longitudinal profile DXF + vertical_plane. Use with input models/profile_demo_vertical.dxf -->
+<pySweptPathConfig version="1.1">
+  <vehicles>
+    <design_vehicle>vehicles/tiny_home_12m_trailer.xml</design_vehicle>
+  </vehicles>
+  <dxf>
+    <input_file>input models/profile_demo_vertical.dxf</input_file>
+    <steering_layer>Steering_Centreline</steering_layer>
+    <carriageway_layer>Carriageway_Boundary</carriageway_layer>
+  </dxf>
+  <simulation>
+    <vertical_plane>true</vertical_plane>
+    <step_size_m>0.50</step_size_m>
+    <densify_arcs_to>0.25</densify_arcs_to>
+    <path_recovery_gain>0.8</path_recovery_gain>
+  </simulation>
+  <turning>
+    <design_speed_kmh>5.0</design_speed_kmh>
+    <max_steer_angle_deg>42.0</max_steer_angle_deg>
+    <rate_of_turn_deg_per_s>15.0</rate_of_turn_deg_per_s>
+    <pid><enabled>false</enabled><kp>0.5</kp><ki>0.0</ki><kd>0.1</kd></pid>
+    <stop_lock><enabled>true</enabled><min_turning_radius_m>11.8</min_turning_radius_m></stop_lock>
+  </turning>
+  <output>
+    <dxf>true</dxf>
+    <dxf_prefix>Swept_</dxf_prefix>
+    <plot>true</plot>
+    <animation>true</animation>
+    <animation_fps>10</animation_fps>
+    <report>text,json</report>
+  </output>
+</pySweptPathConfig>

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+*.egg
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+.cursor/
+
+# Runtime outputs (regenerated)
+reports/
+web_jobs/
+uploads/
+*.gif
+/Swept_*.png
+/Swept_*.gif
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env.local
+railway.toml.local

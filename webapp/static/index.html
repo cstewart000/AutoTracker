@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoTracker — Swept Path Analysis</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">⟲</span>
+      <div>
+        <h1>AutoTracker</h1>
+        <p class="tag">Open-source swept path analysis · pySweptPath</p>
+      </div>
+    </div>
+    <nav>
+      <a href="/docs" target="_blank" rel="noopener">API docs</a>
+      <a href="https://github.com/cstewart000/AutoTracker" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="panel controls">
+      <h2>Run analysis</h2>
+
+      <label>Design vehicle
+        <select id="vehicle"></select>
+      </label>
+
+      <label>Demo DXF
+        <select id="demo">
+          <option value="">— none (upload or default) —</option>
+        </select>
+      </label>
+
+      <label class="file">Upload DXF (optional)
+        <input type="file" id="dxf" accept=".dxf,application/dxf,*/*" />
+      </label>
+
+      <div class="grid2">
+        <label>Step size (m)
+          <input type="number" id="step" value="0.25" min="0.05" max="2" step="0.05" />
+        </label>
+        <label>Max steer (°)
+          <input type="number" id="steer" value="42" min="5" max="60" step="1" />
+        </label>
+        <label>Speed (km/h)
+          <input type="number" id="speed" value="5" min="1" max="40" step="1" />
+        </label>
+        <label class="check">
+          <input type="checkbox" id="stop_lock" checked /> Stop-lock
+        </label>
+        <label class="check">
+          <input type="checkbox" id="vertical" /> Vertical profile
+        </label>
+        <label class="check">
+          <input type="checkbox" id="animation" /> Animation GIF
+        </label>
+      </div>
+
+      <button id="run" class="primary">Run simulation</button>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel results">
+      <h2>Results</h2>
+      <div id="report" class="report empty">Run a simulation to see clearance and steer metrics.</div>
+      <div class="viz">
+        <img id="plot" alt="Swept path plot" hidden />
+        <canvas id="canvas" width="720" height="480" hidden></canvas>
+      </div>
+      <div id="downloads" class="downloads" hidden>
+        <h3>Downloads</h3>
+        <div class="dl-links"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Low-speed Ackermann kinematics · MIT · CLI + web share one engine</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

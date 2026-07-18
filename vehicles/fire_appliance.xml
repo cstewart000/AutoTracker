@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vehicle name="Fire_Appliance" version="1.0">
+  <metadata>
+    <source>pySweptPath</source>
+    <units>metres</units>
+    <last_edited>2026-02-16</last_edited>
+  </metadata>
+  <body>
+    <width>2.50</width>
+    <front_overhang>1.50</front_overhang>
+    <rear_overhang>1.80</rear_overhang>
+  </body>
+  <axles>
+    <axle index="0">
+      <longitudinal_pos>0.0</longitudinal_pos>
+      <is_steering>true</is_steering>
+      <track_width>2.00</track_width>
+      <tyre_width>0.30</tyre_width>
+      <max_steer_angle_deg>42.0</max_steer_angle_deg>
+    </axle>
+    <axle index="1">
+      <longitudinal_pos>-3.80</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.00</track_width>
+      <tyre_width>0.30</tyre_width>
+    </axle>
+  </axles>
+</vehicle>

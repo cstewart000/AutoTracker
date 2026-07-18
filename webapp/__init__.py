@@ -1,0 +1,1 @@
+"""AutoTracker web application (FastAPI)."""

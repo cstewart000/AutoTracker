@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Austroads AP-G34 Design Vehicle: Passenger vehicle 5.2 m -->
+<vehicle name="AP-G34 Passenger 5.2m" version="1.0">
+  <metadata>
+    <source>Austroads AP-G34 / pySweptPath</source>
+    <units>metres</units>
+    <reference>AP-G34-23 Design Vehicles and Turning Path Templates</reference>
+  </metadata>
+  <body>
+    <width>1.85</width>
+    <front_overhang>1.0</front_overhang>
+    <rear_overhang>1.4</rear_overhang>
+  </body>
+  <axles>
+    <axle index="0">
+      <longitudinal_pos>0.0</longitudinal_pos>
+      <is_steering>true</is_steering>
+      <track_width>1.6</track_width>
+      <tyre_width>0.25</tyre_width>
+      <max_steer_angle_deg>35.0</max_steer_angle_deg>
+    </axle>
+    <axle index="1">
+      <longitudinal_pos>-2.8</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>1.6</track_width>
+      <tyre_width>0.25</tyre_width>
+    </axle>
+  </axles>
+</vehicle>

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pysweptpath"
+version = "0.2.0"
+description = "Open-source Ackermann swept path simulator (AutoTURN-style) — AutoTracker"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Cameron Stewart" }]
+dependencies = [
+  "ezdxf>=1.0",
+  "shapely>=2.0",
+  "numpy>=1.24",
+  "matplotlib>=3.7",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "python-multipart>=0.0.9",
+  "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+pysweptpath = "pysweptpath.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pysweptpath*", "webapp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

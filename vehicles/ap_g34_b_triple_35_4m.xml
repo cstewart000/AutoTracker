@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Austroads AP-G34-23 (Edition 4.0) Design Vehicle: B-triple 35.4 m (three semitrailers) -->
+<vehicle name="AP-G34 B-Triple 35.4m" version="1.0">
+  <metadata>
+    <source>Austroads AP-G34-23 / pySweptPath</source>
+    <units>metres</units>
+    <reference>AP-G34-23 Design Vehicles and Turning Path Templates (Edition 4.0, May 2023)</reference>
+  </metadata>
+  <articulations>
+    <longitudinal_pos>-3.8</longitudinal_pos>
+    <longitudinal_pos>-10.8</longitudinal_pos>
+    <longitudinal_pos>-21.3</longitudinal_pos>
+  </articulations>
+  <body_segments>
+    <segment index="0">
+      <width>2.5</width>
+      <front_longitudinal>1.2</front_longitudinal>
+      <rear_longitudinal>-3.8</rear_longitudinal>
+    </segment>
+    <segment index="1">
+      <width>2.5</width>
+      <front_longitudinal>-3.8</front_longitudinal>
+      <rear_longitudinal>-10.8</rear_longitudinal>
+    </segment>
+    <segment index="2">
+      <width>2.5</width>
+      <front_longitudinal>-10.8</front_longitudinal>
+      <rear_longitudinal>-21.3</rear_longitudinal>
+    </segment>
+    <segment index="3">
+      <width>2.5</width>
+      <front_longitudinal>-21.3</front_longitudinal>
+      <rear_longitudinal>-35.4</rear_longitudinal>
+    </segment>
+  </body_segments>
+  <axles>
+    <axle index="0">
+      <longitudinal_pos>0.0</longitudinal_pos>
+      <is_steering>true</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+      <max_steer_angle_deg>42.0</max_steer_angle_deg>
+    </axle>
+    <axle index="1">
+      <longitudinal_pos>-1.5</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="2">
+      <longitudinal_pos>-3.0</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="3">
+      <longitudinal_pos>-10.8</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="4">
+      <longitudinal_pos>-12.3</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="5">
+      <longitudinal_pos>-19.8</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="6">
+      <longitudinal_pos>-21.3</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="7">
+      <longitudinal_pos>-32.4</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="8">
+      <longitudinal_pos>-33.9</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+  </axles>
+</vehicle>

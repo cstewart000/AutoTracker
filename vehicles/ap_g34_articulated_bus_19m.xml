@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Austroads AP-G34 Design Vehicle: Articulated bus 19 m -->
+<vehicle name="AP-G34 Articulated Bus 19m" version="1.0">
+  <metadata>
+    <source>Austroads AP-G34 / pySweptPath</source>
+    <units>metres</units>
+    <reference>AP-G34-23 Design Vehicles and Turning Path Templates</reference>
+  </metadata>
+  <body_segments>
+    <front>
+      <width>2.5</width>
+      <front_longitudinal>1.2</front_longitudinal>
+      <rear_longitudinal>-5.5</rear_longitudinal>
+    </front>
+    <rear>
+      <width>2.5</width>
+      <front_longitudinal>-5.5</front_longitudinal>
+      <rear_longitudinal>-18.0</rear_longitudinal>
+    </rear>
+  </body_segments>
+  <axles>
+    <axle index="0">
+      <longitudinal_pos>0.0</longitudinal_pos>
+      <is_steering>true</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+      <max_steer_angle_deg>42.0</max_steer_angle_deg>
+    </axle>
+    <axle index="1">
+      <longitudinal_pos>-3.0</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+    <axle index="2">
+      <longitudinal_pos>-18.3</longitudinal_pos>
+      <is_steering>false</is_steering>
+      <track_width>2.05</track_width>
+      <tyre_width>0.35</tyre_width>
+    </axle>
+  </axles>
+  <articulation>
+    <longitudinal_pos>-5.5</longitudinal_pos>
+  </articulation>
+</vehicle>
