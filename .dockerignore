@@ -1,0 +1,12 @@
+.venv
+venv
+.git
+.cursor
+reports
+web_jobs
+__pycache__
+*.pyc
+*.gif
+Swept_*.png
+.pytest_cache
+*.egg-info
