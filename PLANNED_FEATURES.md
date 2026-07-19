@@ -27,10 +27,12 @@ Living backlog derived from product discussion (2026-07). Check items as they sh
 | B4 | Download DXF / report / plot | ✅ | `/api/jobs/.../files/` |
 | B5 | Railway deploy | ✅ | `railway.toml` |
 | B6 | Interactive path editor (draw centreline) | ⬜ | |
-| B7 | Vehicle preview (plan outline) | ⬜ | |
+| B7 | Vehicle preview (plan outline) | ✅ | Editor canvas + outline API |
 | B8 | Frame scrubber (scrub along path) | ⬜ | Replace slow GIFs for review |
 | B9 | Layer toggles (envelope, wheels, encroachment) | ⬜ | |
 | B10 | Project sessions (localStorage / server) | ⬜ | |
+| B11 | Web vehicle editor (drag-and-drop config) | ✅ | Axles, body, articulation |
+| B12 | Standard 90° / 180° turn profile views | ✅ | `/api/turn-profiles` |
 
 ## Phase C — Accuracy & trust
 

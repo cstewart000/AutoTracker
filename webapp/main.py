@@ -19,8 +19,9 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 from pysweptpath.analysis import run_analysis
 from pysweptpath.config import (
@@ -32,6 +33,13 @@ from pysweptpath.config import (
     StopLockConfig,
     TurningConfig,
     load_config,
+)
+from pysweptpath.turn_templates import simulate_standard_profiles
+from pysweptpath.vehicle import load_vehicle, write_vehicle
+from pysweptpath.vehicle_json import (
+    editor_outline,
+    vehicle_from_dict,
+    vehicle_to_dict,
 )
 
 # Headless plot backend for Railway / servers
@@ -50,8 +58,21 @@ JOBS_DIR.mkdir(parents=True, exist_ok=True)
 app = FastAPI(
     title="AutoTracker / pySweptPath",
     description="Open-source swept path analysis (AutoTURN-style)",
-    version="0.2.0",
+    version="0.3.0",
 )
+
+
+class TurnProfileRequest(BaseModel):
+    vehicle_id: str | None = None
+    vehicle: dict | None = None
+    radius_90_m: float = Field(12.5, ge=3.0, le=80.0)
+    radius_180_m: float = Field(12.5, ge=3.0, le=80.0)
+    step_m: float = Field(0.35, ge=0.1, le=2.0)
+    stop_lock: bool = True
+
+
+class VehicleValidateRequest(BaseModel):
+    vehicle: dict
 
 if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -148,12 +169,94 @@ def index() -> HTMLResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "autotracker", "version": "0.2.0"}
+    return {"status": "ok", "service": "autotracker", "version": "0.3.0"}
 
 
 @app.get("/api/vehicles")
 def api_vehicles() -> dict[str, Any]:
     return {"vehicles": _list_vehicles()}
+
+
+def _resolve_vehicle(
+    vehicle_id: str | None = None, vehicle_dict: dict | None = None
+):
+    if vehicle_dict:
+        return vehicle_from_dict(vehicle_dict)
+    if vehicle_id:
+        return load_vehicle(_vehicle_path(vehicle_id))
+    raise HTTPException(400, "Provide vehicle_id or vehicle JSON")
+
+
+@app.get("/api/vehicles/{vehicle_id}")
+def api_vehicle_detail(vehicle_id: str) -> dict[str, Any]:
+    """Full vehicle JSON + plan outline for the editor."""
+    path = _vehicle_path(vehicle_id)
+    v = load_vehicle(path)
+    data = vehicle_to_dict(v)
+    data["id"] = path.stem
+    data["file"] = path.name
+    data["outline"] = editor_outline(v)
+    return data
+
+
+@app.post("/api/vehicles/validate")
+def api_vehicle_validate(body: VehicleValidateRequest) -> dict[str, Any]:
+    """Validate editor vehicle JSON; return outline for canvas redraw."""
+    try:
+        v = vehicle_from_dict(body.vehicle)
+    except Exception as e:
+        raise HTTPException(400, f"Invalid vehicle: {e}") from e
+    return {
+        "ok": True,
+        "vehicle": vehicle_to_dict(v),
+        "outline": editor_outline(v),
+    }
+
+
+@app.post("/api/vehicles/export-xml")
+def api_vehicle_export_xml(body: VehicleValidateRequest) -> Response:
+    """Return vehicle XML for download."""
+    try:
+        v = vehicle_from_dict(body.vehicle)
+    except Exception as e:
+        raise HTTPException(400, f"Invalid vehicle: {e}") from e
+    job = JOBS_DIR / "exports"
+    job.mkdir(parents=True, exist_ok=True)
+    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in v.name)[:60]
+    path = job / f"{safe or 'vehicle'}.xml"
+    write_vehicle(v, path)
+    xml_text = path.read_text(encoding="utf-8")
+    return Response(
+        content=xml_text,
+        media_type="application/xml",
+        headers={
+            "Content-Disposition": f'attachment; filename="{path.name}"',
+        },
+    )
+
+
+@app.post("/api/turn-profiles")
+def api_turn_profiles(body: TurnProfileRequest) -> dict[str, Any]:
+    """Simulate standard 90° and 180° turn swept-path profiles."""
+    try:
+        v = _resolve_vehicle(body.vehicle_id, body.vehicle)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(400, f"Invalid vehicle: {e}") from e
+    try:
+        result = simulate_standard_profiles(
+            v,
+            radius_90_m=body.radius_90_m,
+            radius_180_m=body.radius_180_m,
+            step_m=body.step_m,
+            stop_lock=body.stop_lock,
+        )
+        result["outline"] = editor_outline(v)
+        return result
+    except Exception as e:
+        logger.exception("Turn profile failed: %s", e)
+        raise HTTPException(500, f"Turn profile failed: {e}") from e
 
 
 @app.get("/api/demos")

@@ -15,30 +15,30 @@
         <p class="tag">Open-source swept path analysis · pySweptPath</p>
       </div>
     </div>
-    <nav>
-      <a href="/docs" target="_blank" rel="noopener">API docs</a>
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="analyze" role="tab">Analyze</button>
+      <button type="button" class="tab" data-tab="editor" role="tab">Vehicle editor</button>
+      <button type="button" class="tab" data-tab="turns" role="tab">90° / 180° turns</button>
+      <a href="/docs" target="_blank" rel="noopener">API</a>
       <a href="https://github.com/cstewart000/AutoTracker" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </header>
 
-  <main class="layout">
+  <!-- ═══ ANALYZE ═══ -->
+  <main id="tab-analyze" class="layout tab-panel active">
     <section class="panel controls">
       <h2>Run analysis</h2>
-
       <label>Design vehicle
         <select id="vehicle"></select>
       </label>
-
       <label>Demo DXF
         <select id="demo">
           <option value="">— none (upload or default) —</option>
         </select>
       </label>
-
       <label class="file">Upload DXF (optional)
         <input type="file" id="dxf" accept=".dxf,application/dxf,*/*" />
       </label>
-
       <div class="grid2">
         <label>Step size (m)
           <input type="number" id="step" value="0.25" min="0.05" max="2" step="0.05" />
@@ -49,21 +49,13 @@
         <label>Speed (km/h)
           <input type="number" id="speed" value="5" min="1" max="40" step="1" />
         </label>
-        <label class="check">
-          <input type="checkbox" id="stop_lock" checked /> Stop-lock
-        </label>
-        <label class="check">
-          <input type="checkbox" id="vertical" /> Vertical profile
-        </label>
-        <label class="check">
-          <input type="checkbox" id="animation" /> Animation GIF
-        </label>
+        <label class="check"><input type="checkbox" id="stop_lock" checked /> Stop-lock</label>
+        <label class="check"><input type="checkbox" id="vertical" /> Vertical profile</label>
+        <label class="check"><input type="checkbox" id="animation" /> Animation GIF</label>
       </div>
-
-      <button id="run" class="primary">Run simulation</button>
+      <button id="run" class="primary" type="button">Run simulation</button>
       <p id="status" class="status" aria-live="polite"></p>
     </section>
-
     <section class="panel results">
       <h2>Results</h2>
       <div id="report" class="report empty">Run a simulation to see clearance and steer metrics.</div>
@@ -78,10 +70,116 @@
     </section>
   </main>
 
+  <!-- ═══ VEHICLE EDITOR ═══ -->
+  <main id="tab-editor" class="layout tab-panel layout-editor">
+    <section class="panel controls">
+      <h2>Vehicle library</h2>
+      <label>Load vehicle
+        <select id="ed-vehicle"></select>
+      </label>
+      <div class="btn-row">
+        <button type="button" id="ed-load" class="secondary">Load</button>
+        <button type="button" id="ed-new" class="secondary">New rigid</button>
+      </div>
+
+      <h2 class="mt">Properties</h2>
+      <label>Name
+        <input type="text" id="ed-name" />
+      </label>
+      <div class="grid2">
+        <label>Body width (m)
+          <input type="number" id="ed-width" step="0.05" min="0.5" max="4" />
+        </label>
+        <label>Max steer (°)
+          <input type="number" id="ed-maxsteer" step="1" min="5" max="60" />
+        </label>
+        <label>Front overhang (m)
+          <input type="number" id="ed-front" step="0.05" min="0" max="15" />
+        </label>
+        <label>Rear overhang (m)
+          <input type="number" id="ed-rear" step="0.05" min="0" max="30" />
+        </label>
+      </div>
+
+      <h2 class="mt">Axles</h2>
+      <p class="hint">Drag axles on the canvas (along the vehicle centreline). Steering axle stays at 0&nbsp;m.</p>
+      <div id="ed-axle-list" class="axle-list"></div>
+      <div class="btn-row">
+        <button type="button" id="ed-add-axle" class="secondary">+ Fixed axle</button>
+        <button type="button" id="ed-add-steer" class="secondary">+ Steer axle</button>
+      </div>
+
+      <h2 class="mt">Articulation</h2>
+      <label class="check"><input type="checkbox" id="ed-artic-on" /> Articulated (semi)</label>
+      <label>Pivot position (m, negative = rear)
+        <input type="number" id="ed-artic" step="0.1" />
+      </label>
+
+      <div class="btn-row mt">
+        <button type="button" id="ed-export" class="primary">Download XML</button>
+        <button type="button" id="ed-to-turns" class="secondary">Preview turns →</button>
+      </div>
+      <p id="ed-status" class="status"></p>
+    </section>
+
+    <section class="panel results editor-canvas-panel">
+      <h2>Plan view — drag to edit</h2>
+      <p class="hint">x = forward, y = left. Drag <strong>axles</strong> (longitudinal), <strong>width handles</strong>, <strong>front/rear overhangs</strong>, or the <strong>articulation</strong> diamond.</p>
+      <div class="viz editor-viz">
+        <canvas id="ed-canvas" width="800" height="520"></canvas>
+      </div>
+      <div id="ed-dims" class="dims"></div>
+    </section>
+  </main>
+
+  <!-- ═══ TURN PROFILES ═══ -->
+  <main id="tab-turns" class="layout tab-panel layout-turns">
+    <section class="panel controls">
+      <h2>Turn templates</h2>
+      <p class="hint">Austroads-style centreline templates: approach → constant-radius arc → exit. Uses the editor vehicle if loaded, otherwise the library pick.</p>
+      <label>Vehicle source
+        <select id="tp-source">
+          <option value="editor">Current editor vehicle</option>
+          <option value="library">Library vehicle</option>
+        </select>
+      </label>
+      <label id="tp-lib-wrap">Library vehicle
+        <select id="tp-vehicle"></select>
+      </label>
+      <div class="grid2">
+        <label>90° radius (m)
+          <input type="number" id="tp-r90" value="12.5" min="3" max="80" step="0.5" />
+        </label>
+        <label>180° radius (m)
+          <input type="number" id="tp-r180" value="12.5" min="3" max="80" step="0.5" />
+        </label>
+        <label>Step (m)
+          <input type="number" id="tp-step" value="0.35" min="0.15" max="1" step="0.05" />
+        </label>
+        <label class="check"><input type="checkbox" id="tp-stoplock" checked /> Stop-lock</label>
+      </div>
+      <button type="button" id="tp-run" class="primary">Generate 90° &amp; 180° profiles</button>
+      <p id="tp-status" class="status"></p>
+      <div id="tp-metrics" class="report empty">Metrics appear after a run.</div>
+    </section>
+    <section class="panel results turns-grid">
+      <div class="turn-card">
+        <h2>90° left turn</h2>
+        <canvas id="tp-c90" width="640" height="480"></canvas>
+      </div>
+      <div class="turn-card">
+        <h2>180° U-turn</h2>
+        <canvas id="tp-c180" width="640" height="480"></canvas>
+      </div>
+    </section>
+  </main>
+
   <footer>
-    <p>Low-speed Ackermann kinematics · MIT · CLI + web share one engine</p>
+    <p>Low-speed Ackermann kinematics · Drag-edit vehicles · Standard turn templates · MIT</p>
   </footer>
 
   <script src="/static/app.js"></script>
+  <script src="/static/editor.js"></script>
+  <script src="/static/turns.js"></script>
 </body>
 </html>

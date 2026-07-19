@@ -1,3 +1,24 @@
+/* Shared: tabs + analyze panel */
+
+function switchTab(name) {
+  document.querySelectorAll(".tab-panel").forEach((el) => {
+    el.classList.toggle("active", el.id === "tab-" + name);
+  });
+  document.querySelectorAll("button.tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === name);
+  });
+  if (name === "editor" && window.VehicleEditor) {
+    window.VehicleEditor.onShow();
+  }
+  if (name === "turns" && window.TurnProfiles) {
+    window.TurnProfiles.onShow();
+  }
+}
+
+document.querySelectorAll("button.tab").forEach((btn) => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+
 async function loadLists() {
   const [vRes, dRes] = await Promise.all([
     fetch("/api/vehicles"),
@@ -5,15 +26,24 @@ async function loadLists() {
   ]);
   const vData = await vRes.json();
   const dData = await dRes.json();
-  const veh = document.getElementById("vehicle");
-  veh.innerHTML = "";
-  for (const v of vData.vehicles || []) {
-    const opt = document.createElement("option");
-    opt.value = v.id;
-    opt.textContent = v.name;
-    if (v.id === "ap_g34_prime_mover_semi_19m") opt.selected = true;
-    veh.appendChild(opt);
+  const vehicles = vData.vehicles || [];
+
+  function fillSelect(sel, preferred) {
+    if (!sel) return;
+    sel.innerHTML = "";
+    for (const v of vehicles) {
+      const opt = document.createElement("option");
+      opt.value = v.id;
+      opt.textContent = v.name;
+      if (v.id === preferred) opt.selected = true;
+      sel.appendChild(opt);
+    }
   }
+
+  fillSelect(document.getElementById("vehicle"), "ap_g34_prime_mover_semi_19m");
+  fillSelect(document.getElementById("ed-vehicle"), "semi_wb50");
+  fillSelect(document.getElementById("tp-vehicle"), "semi_wb50");
+
   const demo = document.getElementById("demo");
   for (const d of dData.demos || []) {
     const opt = document.createElement("option");
@@ -22,10 +52,15 @@ async function loadLists() {
     if (d.id === "rectangle_20x60") opt.selected = true;
     demo.appendChild(opt);
   }
+
+  if (window.VehicleEditor) {
+    window.VehicleEditor.setVehicleList(vehicles);
+  }
 }
 
 function drawCanvas(data) {
   const canvas = document.getElementById("canvas");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const path = data.path_pts || [];
   const env = data.envelope_outer || [];
@@ -54,9 +89,7 @@ function drawCanvas(data) {
   const scale = Math.min((w - 2 * pad) / dx, (h - 2 * pad) / dy);
 
   function tx(x, y) {
-    const sx = pad + (x - minX) * scale;
-    const sy = h - pad - (y - minY) * scale;
-    return [sx, sy];
+    return [pad + (x - minX) * scale, h - pad - (y - minY) * scale];
   }
 
   ctx.fillStyle = "#0a0e12";
@@ -106,7 +139,6 @@ function drawCanvas(data) {
   }
 
   strokePoly(path, "#3ecf8e", 2, false);
-
   if (pos.length) {
     strokePoly(pos.map((p) => [p[0], p[1]]), "#e7eef5", 1, false);
   }
@@ -178,9 +210,7 @@ async function runSim() {
   try {
     const res = await fetch("/api/simulate", { method: "POST", body: fd });
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.detail || res.statusText);
-    }
+    if (!res.ok) throw new Error(data.detail || res.statusText);
     status.className = "status ok";
     status.textContent = data.message || "Done.";
     showReport(data);
@@ -199,6 +229,37 @@ async function runSim() {
 }
 
 document.getElementById("run").addEventListener("click", runSim);
+
+// Shared world→canvas helper for editor & turns
+window.GeoCanvas = {
+  fit(points, w, h, pad = 28) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of points) {
+      const x = p[0], y = p[1];
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+    if (!isFinite(minX)) {
+      minX = -5; maxX = 5; minY = -3; maxY = 3;
+    }
+    const dx = maxX - minX || 1;
+    const dy = maxY - minY || 1;
+    const scale = Math.min((w - 2 * pad) / dx, (h - 2 * pad) / dy);
+    return {
+      minX, minY, maxX, maxY, scale, pad, w, h,
+      toScreen(x, y) {
+        return [pad + (x - minX) * scale, h - pad - (y - minY) * scale];
+      },
+      toWorld(sx, sy) {
+        return [(sx - pad) / scale + minX, (h - pad - sy) / scale + minY];
+      },
+    };
+  },
+};
+
 loadLists().catch((e) => {
-  document.getElementById("status").textContent = "Failed to load lists: " + e;
+  const s = document.getElementById("status");
+  if (s) s.textContent = "Failed to load lists: " + e;
 });

@@ -50,7 +50,9 @@ uvicorn webapp.main:app --host 0.0.0.0 --port 8000
 # open http://127.0.0.1:8000
 ```
 
-API: `GET /api/health`, `GET /api/vehicles`, `GET /api/demos`, `POST /api/simulate`, OpenAPI at `/docs`.
+**Web tabs:** Analyze (DXF sim) · **Vehicle editor** (drag axles / body / articulation) · **90° / 180° turn profiles**
+
+API: `GET /api/health`, `GET /api/vehicles`, `GET /api/vehicles/{id}`, `POST /api/vehicles/validate`, `POST /api/vehicles/export-xml`, `POST /api/turn-profiles`, `GET /api/demos`, `POST /api/simulate`, OpenAPI at `/docs`.
 
 ### Programmatic API
 
