@@ -43,3 +43,28 @@ def test_simulate_profiles():
     assert "90" in out["profiles"] and "180" in out["profiles"]
     assert out["profiles"]["90"]["envelope"] is not None or out["profiles"]["90"]["steps"] > 0
     assert out["profiles"]["90"]["max_steer_deg"] >= 0
+    p90 = out["profiles"]["90"]
+    assert p90["turn_center"] is not None
+    assert p90["inscribed_radius_m"] > 0
+    assert p90["exscribed_radius_m"] >= p90["inscribed_radius_m"] - 1e-6
+    # Outer should be at least about path radius for a real envelope
+    if p90["envelope"]:
+        assert p90["exscribed_radius_m"] >= 10.0
+
+
+def test_fitting_radii_sector():
+    from pysweptpath.turn_templates import fitting_turn_radii, turn_arc_center
+
+    r = 12.5
+    c = turn_arc_center(r, True)
+    # Synthetic ring: inner 10, outer 15 in sector
+    import math
+
+    env = []
+    for i in range(20):
+        th = (math.pi / 2) * (i / 19)
+        env.append([c[0] + 10 * math.sin(th), c[1] - 10 * math.cos(th)])
+        env.append([c[0] + 15 * math.sin(th), c[1] - 15 * math.cos(th)])
+    fit = fitting_turn_radii(env, c, r, turn_deg=90, turn_left=True)
+    assert abs(fit["inscribed_radius_m"] - 10) < 0.2
+    assert abs(fit["exscribed_radius_m"] - 15) < 0.2

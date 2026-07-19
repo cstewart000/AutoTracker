@@ -11,6 +11,13 @@ from .path_follow import follow_path
 from .vehicle import Vehicle
 
 
+def turn_arc_center(radius_m: float, turn_left: bool = True) -> tuple[float, float]:
+    """Arc centre for template turns (same geometry as path builders)."""
+    r = max(1.0, float(radius_m))
+    sign = 1.0 if turn_left else -1.0
+    return (0.0, sign * r)
+
+
 def make_90_degree_path(
     radius_m: float,
     approach_m: float = 25.0,
@@ -22,29 +29,21 @@ def make_90_degree_path(
     Straight approach → quarter-circle of radius R → straight exit.
 
     Path centreline: approach along +X, turns 90° (left = +Y exit).
+    Arc centre: turn_arc_center(R).
     """
     r = max(1.0, float(radius_m))
     pts: list[tuple[float, float]] = []
-    # Approach along x-axis ending at origin of arc
     n_app = max(2, int(math.ceil(approach_m / step_m)))
     for i in range(n_app + 1):
         t = i / n_app
         pts.append((-approach_m + t * approach_m, 0.0))
-    # Arc centre: for left turn, centre is at (0, r); path from (0,0) to (r, r)
     sign = 1.0 if turn_left else -1.0
     n_arc = max(8, int(math.ceil((math.pi / 2) * r / step_m)))
     for i in range(1, n_arc + 1):
-        ang = (math.pi / 2) * (i / n_arc)  # 0 → 90° from -Y toward +X for left
-        # Start angle -90° (south of centre), sweep to 0° (east)
-        # centre (0, sign*r): at ang=0 from vertical: point at (0,0)
-        # parametric: centre + (r*sin(θ), -sign*r*cos(θ)) with θ 0→π/2
-        # θ=0: (0, -sign*r) relative to centre → world (0,0)
-        # θ=π/2: (r, 0) relative → world (r, sign*r)
-        th = ang
+        th = (math.pi / 2) * (i / n_arc)
         x = 0.0 + r * math.sin(th)
         y = sign * r + (-sign) * r * math.cos(th)
         pts.append((x, y))
-    # Exit along +Y (left) or -Y (right) from end of arc
     end = pts[-1]
     n_ex = max(2, int(math.ceil(exit_m / step_m)))
     for i in range(1, n_ex + 1):
@@ -64,6 +63,7 @@ def make_180_degree_path(
     Straight approach → semicircle of radius R → straight exit opposite direction.
 
     U-turn: approach along +X, exit parallel -X offset by 2R.
+    Arc centre: turn_arc_center(R).
     """
     r = max(1.0, float(radius_m))
     pts: list[tuple[float, float]] = []
@@ -72,21 +72,82 @@ def make_180_degree_path(
         t = i / n_app
         pts.append((-approach_m + t * approach_m, 0.0))
     sign = 1.0 if turn_left else -1.0
-    # Centre of semicircle at (0, sign*r)
     n_arc = max(12, int(math.ceil(math.pi * r / step_m)))
     for i in range(1, n_arc + 1):
-        th = math.pi * (i / n_arc)  # 0 → 180°
+        th = math.pi * (i / n_arc)
         x = 0.0 + r * math.sin(th)
         y = sign * r + (-sign) * r * math.cos(th)
         pts.append((x, y))
-    # Exit continuing in -X direction from end (0-ish, 2*sign*r) wait:
-    # θ=π: x=0, y=sign*r - (-sign)*r*(-1 wait): cos(π)=-1 → y = sign*r + (-sign)*r*(-1) = sign*r + sign*r = 2*sign*r
     end = pts[-1]
     n_ex = max(2, int(math.ceil(exit_m / step_m)))
     for i in range(1, n_ex + 1):
         t = i / n_ex
         pts.append((end[0] - t * exit_m, end[1]))
     return pts
+
+
+def _point_in_turn_sector(
+    x: float,
+    y: float,
+    cx: float,
+    cy: float,
+    turn_deg: int,
+    turn_left: bool,
+    margin_rad: float = 0.12,
+) -> bool:
+    """True if (x,y) lies in the template arc angular sector about the turn centre."""
+    dx = x - cx
+    dy = y - cy
+    # Parametric path uses relative (r*sin θ, -sign*r*cos θ), θ∈[0, α]
+    # Map to θ via atan2 so θ=0 is start of arc.
+    sign = 1.0 if turn_left else -1.0
+    # relative = (r sin θ, -sign r cos θ) → sin θ = dx/r, cos θ = -sign*dy/r
+    # θ = atan2(dx, -sign*dy) for left: atan2(dx, -dy)
+    th = math.atan2(dx, -sign * dy)
+    if th < -1e-6:
+        th += 2 * math.pi
+    alpha = math.pi / 2 if turn_deg == 90 else math.pi
+    return -margin_rad <= th <= alpha + margin_rad
+
+
+def fitting_turn_radii(
+    envelope: list[list[float]] | list[tuple[float, float]] | None,
+    center: tuple[float, float],
+    path_radius_m: float,
+    turn_deg: int,
+    turn_left: bool = True,
+) -> dict[str, float | list[float] | None]:
+    """
+    Inscribed (inner) and exscribed (outer) circles about the turn centre.
+
+    Radii are min/max distance from the turn centre to swept-envelope vertices
+    that lie in the turn arc sector (approach/exit straights excluded).
+    """
+    cx, cy = center
+    r_path = float(path_radius_m)
+    r_in = r_path
+    r_out = r_path
+    n_used = 0
+    if envelope:
+        dists: list[float] = []
+        for p in envelope:
+            x, y = float(p[0]), float(p[1])
+            if not _point_in_turn_sector(x, y, cx, cy, turn_deg, turn_left):
+                continue
+            d = math.hypot(x - cx, y - cy)
+            if d > 0.05:
+                dists.append(d)
+        if dists:
+            r_in = min(dists)
+            r_out = max(dists)
+            n_used = len(dists)
+    return {
+        "center": [cx, cy],
+        "path_radius_m": r_path,
+        "inscribed_radius_m": float(r_in),
+        "exscribed_radius_m": float(r_out),
+        "sector_samples": n_used,
+    }
 
 
 def _wheelbase_m(vehicle: Vehicle) -> float:
@@ -167,24 +228,40 @@ def simulate_turn_profile(
         if hasattr(geom, "exterior"):
             envelope = [[float(x), float(y)] for x, y in geom.exterior.coords]
 
+    center = turn_arc_center(radius_m, turn_left=turn_left)
+    fit = fitting_turn_radii(
+        envelope, center, radius_m, turn_deg=turn_deg, turn_left=turn_left
+    )
+
     # Downsample positions for JSON
     pos_list = list(positions) if positions else []
     if len(pos_list) > 250:
         step = max(1, len(pos_list) // 250)
-        pos_list = pos_list[::step] + ([pos_list[-1]] if pos_list[-1] != pos_list[::step][-1] else [])
+        pos_list = pos_list[::step] + (
+            [pos_list[-1]] if pos_list[-1] != pos_list[::step][-1] else []
+        )
 
     return {
         "turn_deg": turn_deg,
         "radius_m": radius_m,
-        "path": densified if len(densified) <= 400 else densified[:: max(1, len(densified) // 400)],
+        "path": densified
+        if len(densified) <= 400
+        else densified[:: max(1, len(densified) // 400)],
         "envelope": envelope,
-        "positions_sample": [[float(p[0]), float(p[1]), float(p[2])] for p in pos_list],
+        "positions_sample": [
+            [float(p[0]), float(p[1]), float(p[2])] for p in pos_list
+        ],
         "max_steer_deg": max_steer_achieved,
         "min_radius_m": min_radius,
         "wheelbase_m": wb,
         "steer_limit_deg": max_steer,
         "steps": len(positions) if positions else 0,
         "saturated": max_steer_achieved >= max_steer - 0.5,
+        "turn_center": list(center),
+        "inscribed_radius_m": fit["inscribed_radius_m"],
+        "exscribed_radius_m": fit["exscribed_radius_m"],
+        "path_radius_m": fit["path_radius_m"],
+        "fit_sector_samples": fit["sector_samples"],
     }
 
 
